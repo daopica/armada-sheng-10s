@@ -24,7 +24,7 @@ on:
         description: "Target device (selects boot.img geometry, DTB and flash scripts)"
         type: choice
         options: [sm8550-xiaomi-sheng, sm8250-xiaomi-thyme]
-        default: sm8550-xiaomi-sheng
+        default: sm8250-xiaomi-thyme
       console_mode:
         description: "quiet = armada splash; verbose = loglevel=7 console (diagnose boot hangs)"
         type: choice
