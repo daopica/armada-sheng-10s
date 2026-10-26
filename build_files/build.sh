@@ -31,6 +31,11 @@ device_steps() {
 
 run_step ./10-base-packages.sh
 run_step ./20-install-kernel.sh
+
+echo "==> Checking thyme DTB after kernel install"
+find /usr/lib/modules -type f -name '*thyme*.dtb' -print
+find /boot -maxdepth 2 -type f -name '*thyme*.dtb' -print
+
 run_step ./30-install-steam-session.sh
 run_step ./40-vendor-system-files.sh
 run_step ./45-install-decky-plugins.sh
