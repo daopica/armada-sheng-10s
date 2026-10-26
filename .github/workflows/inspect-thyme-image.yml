@@ -1,0 +1,57 @@
+name: Inspect Thyme Container Image
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: read
+
+jobs:
+  inspect:
+    name: Inspect kernel and DTB in container
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+
+    env:
+      IMAGE: ghcr.io/daopica/armada-sheng-10s@sha256:a314bfd8add7de6990e256647396c1c6769184f13786560c41fba87a9d0a952a
+
+    steps:
+      - name: Pull container image
+        shell: bash
+        run: |
+          set -euxo pipefail
+          echo "=== Pulling image ==="
+          podman pull "$IMAGE"
+
+      - name: Inspect image metadata
+        shell: bash
+        run: |
+          set -euo pipefail
+          podman image inspect "$IMAGE" \
+            --format 'ID={{.Id}} OS={{.Os}} ARCH={{.Architecture}}'
+
+      - name: Check kernel versions and DTB
+        shell: bash
+        run: |
+          set -euxo pipefail
+          podman run --rm --entrypoint /bin/sh "$IMAGE" -c '
+            echo "=== Kernel versions ==="
+            find /usr/lib/modules -mindepth 1 -maxdepth 1 -type d -printf "%f\n"
+
+            echo "=== Kernel files ==="
+            find /usr/lib/modules -type f \( -name vmlinuz -o -name initramfs.img \) -print
+
+            echo "=== Thyme DTB ==="
+            find /usr/lib/modules /boot -type f -iname "*thyme*.dtb" -print 2>/dev/null
+
+            echo "=== Expected DTB ==="
+            find /usr/lib/modules /boot -type f -name "sm8250-xiaomi-thyme.dtb" -print 2>/dev/null
+
+            echo "=== Installed kernel packages ==="
+            dpkg-query -W -f="${Package} ${Version}\n" "*linux*" "*kernel*" 2>/dev/null || true
+          '
+
+      - name: Finish
+        if: always()
+        run: echo "Image inspection finished."
