@@ -135,7 +135,8 @@ case "$DEVICE" in
           echo "--- st-fts modules:"; find . -iname '*fts*' -o -iname '*stfts*' | head; \
           echo "--- touch firmware:"; find "$MNT"/usr/lib/firmware -iname '*ftb*' -o -iname '*fts*' | head -12; \
           echo "--- dts touch node:"; strings "$DTB" | grep -i -E 'fts|touch' | head -8; \
-          echo "--- audio firmware:"; ls "$MNT/usr/lib/firmware/cirrus" 2>/dev/null | head -8; \
+          #echo "--- audio firmware:"; ls "$MNT/usr/lib/firmware/cirrus" 2>/dev/null | head -8; \
+          echo "--- audio firmware:"; ls "$MNT/usr/lib/firmware/cirrus" 2>/dev/null | head -8 || true
           echo "--- usb gadget modules:"; find . -path '*gadget*' -name '*.ko*' | head -8 ) 2>&1 | tee "$OUT/touchchain.log"
         ;;
 esac
