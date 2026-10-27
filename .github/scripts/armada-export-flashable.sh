@@ -54,10 +54,31 @@ ROOTFS="$OUT/rootfs.img"
 MNT="$OUT/mnt"
 mkdir -p "$OUT" "$MNT"
 
+#echo "==> [1/7] Pull the Armada container"
+#podman pull "${REF}"
+#CID=$(podman create "${REF}")
+#############以下改动了
 echo "==> [1/7] Pull the Armada container"
 podman pull "${REF}"
+
+echo "=== Requested image ==="
+echo "$REF"
+
+echo "=== Image ID ==="
+podman image inspect "$REF" --format '{{.Id}}'
+
+echo "=== Kernel module versions in image ==="
+podman run --rm --entrypoint /bin/sh "$REF" -c \
+  'ls -1 /usr/lib/modules/ 2>/dev/null || true'
+
+echo "=== Kernel release files ==="
+podman run --rm --entrypoint /bin/sh "$REF" -c \
+  'find /usr/lib/modules -maxdepth 2 -type f \( -name vmlinuz -o -name modules.dep \) -print 2>/dev/null | head -30'
+
 CID=$(podman create "${REF}")
-trap 'podman rm -f "$CID" 2>/dev/null || true' EXIT
+trap 'if [ -n "${CID:-}" ]; then podman rm -f "$CID" 2>/dev/null || true; fi; mountpoint -q "$MNT" 2>/dev/null && umount "$MNT" || true' EXIT
+######以上改动了
+#trap 'podman rm -f "$CID" 2>/dev/null || true' EXIT
 
 echo "==> [2/7] Create ext4 rootfs image (${IMG_SIZE})"
 # Measure the export stream first so IMG_SIZE always fits the content
