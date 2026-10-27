@@ -193,8 +193,9 @@ jobs:
             sudo buildah bud \
               --build-arg ARMADA_VERSION="${ARMADA_VERSION}" \
               --build-arg ARMADA_DEVICE=sm8250-xiaomi-thyme \
-              --build-arg KERNEL_PKG="${KERNEL_REF}" \
               --build-arg-file="${RUNNER_TEMP}/package-refs.env" \
+              --build-arg KERNEL_PKG="${KERNEL_REF}" \
+              
               --format docker --tls-verify=true \
               --skip-unused-stages=false \
               --target=armada-rootfs \
