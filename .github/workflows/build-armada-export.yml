@@ -83,13 +83,6 @@ jobs:
             esac
           fi
           echo "Exporting ${REF} for ${DEVICE}"
-          echo "==> Checking thyme DTB in container"
-          sudo podman run --rm --entrypoint /bin/sh "${REF}" -c '
-            echo "--- Kernel source DTB ---"
-            find / -type f -path "*/arch/arm64/boot/dts/qcom/*thyme*.dtb" -print 2>/dev/null
-            echo "--- Installed DTB ---"
-            find /usr/lib/modules /boot -type f -name "*thyme*.dtb" -print 2>/dev/null
-          '
           sudo bash .github/scripts/armada-export-flashable.sh \
             "${REF}" "${{ github.workspace }}/output" "${ROOT_PART}" "${MODE}" "${DEVICE}"
           sudo chown -R "$(id -u):$(id -g)" output
