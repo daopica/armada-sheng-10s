@@ -56,7 +56,8 @@ mkdir -p "$OUT" "$MNT"
 echo "==> [1/7] Pull the Armada container"
 podman pull "${REF}"
 CID=$(podman create "${REF}")
-trap 'podman rm -f "$CID" 2>/dev/null || true' EXIT
+#trap 'podman rm -f "$CID" 2>/dev/null || true' EXIT
+trap '[ -z "$CID" ] || podman rm -f "$CID" 2>/dev/null || true' EXIT
 
 echo "==> [2/7] Create ext4 rootfs image (${IMG_SIZE})"
 # Measure the export stream first so IMG_SIZE always fits the content
