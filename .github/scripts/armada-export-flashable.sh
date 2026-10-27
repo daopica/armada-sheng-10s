@@ -177,7 +177,8 @@ cp -a "$REPO/system_files/usr/share/alsa/ucm2/." "$MNT/usr/share/alsa/ucm2/"
     sm8250-xiaomi-thyme)
       echo "--- thyme UCM2:"; ls "$MNT/usr/share/alsa/ucm2/conf.d/sm8250/" 2>&1 | head
       echo "--- umi DSP firmware:"; ls "$MNT/usr/lib/firmware/qcom/sm8250/umi/" 2>&1 | head
-      echo "--- cirrus firmware:"; ls "$MNT/usr/lib/firmware/cirrus/" 2>&1 | head -8
+      #echo "--- cirrus firmware:"; ls "$MNT/usr/lib/firmware/cirrus/" 2>&1 | head -8
+      echo "--- cirrus firmware"; ls "$MNT/usr/lib/firmware/cirrus/" 2>/dev/null | head -8 || true
       echo "--- audio codec/amp modules:"; find "$MNT/usr/lib/modules/$KVER" -iname '*cs35l41*' -o -iname '*wcd93*' | head -8
       ;;
   esac
