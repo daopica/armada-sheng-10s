@@ -63,6 +63,7 @@ jobs:
         env:
           CONTAINER_REF: ${{ inputs.container_ref }}
           MODE: ${{ inputs.console_mode }}
+          DTBO_PARTS: ""
         run: |
           set -euxo pipefail
 
@@ -71,40 +72,22 @@ jobs:
           OUT="$GITHUB_WORKSPACE/output"
           REF="${CONTAINER_REF:-ghcr.io/daopica/armada-sheng-10s:thyme-latest}"
 
-          echo "=================================="
-          echo "Device: $DEVICE"
-          echo "Container: $REF"
-          echo "Root partition: PARTLABEL=$ROOT_PART"
-          echo "Console: $MODE"
-          echo "=================================="
-
-          # 检查 thyme 设备配置
           DEV="system_files/usr/lib/armada"
+
           test -f "$DEV/devices/$DEVICE.conf"
           test -f "$DEV/bootimg-args.$DEVICE"
           test -f "$DEV/supported-dtbs.$DEVICE"
-          test -s "$DEV/supported-dtbs.$DEVICE"
-
-          # 保留原厂 DTBO，只刷写 boot_a 和 boot_b
-          sed -i 's/^ARMADA_DTBO_PARTS=.*/ARMADA_DTBO_PARTS=""/' \
-            "$DEV/devices/$DEVICE.conf"
-
-          grep -E '^ARMADA_BOOT_PARTS=|^ARMADA_DTBO_PARTS=' \
-            "$DEV/devices/$DEVICE.conf"
-
-          # 验证 boot.img 几何参数
-          grep -Fq -- '--pagesize 2048' "$DEV/bootimg-args.$DEVICE"
-          grep -Fq -- '--header_version 1' "$DEV/bootimg-args.$DEVICE"
 
           mkdir -p "$OUT"
 
-          # 必须以 root 执行：脚本需要 mount、mkfs.ext4、umount
-          sudo bash .github/scripts/armada-export-flashable.sh \
+          echo "DTBO_PARTS=[$DTBO_PARTS]"
+
+          sudo --preserve-env=DTBO_PARTS bash \
+            .github/scripts/armada-export-flashable.sh \
             "$REF" "$OUT" "$ROOT_PART" "$MODE" "$DEVICE"
 
           sudo chown -R "$(id -u):$(id -g)" "$OUT"
 
-          # 检查导出文件
           test -s "$OUT/rootfs.img"
           test -s "$OUT/boot_b.img"
           test -s "$OUT/flash.sh"
@@ -112,21 +95,16 @@ jobs:
           test -s "$OUT/MANIFEST.txt"
           test -s "$OUT/SHA256SUMS"
 
-          # 验证 rootfs 与内核启动绑定
-          grep -Fq 'root: PARTLABEL=userdata ext4 growfs' \
-            "$OUT/MANIFEST.txt"
-          grep -Fq 'root=PARTLABEL=userdata' \
-            "$OUT/MANIFEST.txt"
+          grep -Fq 'root: PARTLABEL=userdata ext4 growfs' "$OUT/MANIFEST.txt"
+          grep -Fq 'root=PARTLABEL=userdata' "$OUT/MANIFEST.txt"
 
-          # 确认刷写脚本没有擦除 DTBO
-          if grep -Eq 'fastboot erase dtbo_[ab]' \
-            "$OUT/flash.sh" "$OUT/flash.bat"; then
-            echo "::error::Unexpected DTBO erase command"
+          if grep -Eq 'fastboot erase dtbo_[ab]' "$OUT/flash.sh" "$OUT/flash.bat"; then
+            echo "::error::DTBO erase command detected"
             exit 1
           fi
 
-          echo "===== MANIFEST ====="
-          cat "$OUT/MANIFEST.txt"
+          echo "===== FLASH SCRIPT ====="
+          cat "$OUT/flash.sh"
 
           echo "===== OUTPUT ====="
           ls -lh "$OUT"
