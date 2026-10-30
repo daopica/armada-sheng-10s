@@ -86,7 +86,7 @@ jobs:
             .github/scripts/armada-export-flashable.sh \
             "$REF" "$OUT" "$ROOT_PART" "$MODE" "$DEVICE"
 
-          sudo chown -R "$(id -u):$(id -g)" "$OUT"
+          sudo chown -R "$(id -u):$(id -g)" "$OUT" 
 
           test -s "$OUT/rootfs.img"
           test -s "$OUT/boot_b.img"
